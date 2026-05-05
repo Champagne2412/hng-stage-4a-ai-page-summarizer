@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Page Summarizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #16161a;
+      --surface-2: #1e1e24;
+      --surface-3: #26262e;
+      --border: #2a2a34;
+      --accent: #7c6af7;
+      --accent-glow: rgba(124, 106, 247, 0.25);
+      --accent-2: #f59e0b;
+      --text: #e8e8f0;
+      --text-muted: #7a7a8c;
+      --text-dim: #4a4a5a;
+      --success: #34d399;
+      --error: #f87171;
+      --cache: #60a5fa;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 380px;
+      min-height: 200px;
+      max-height: 580px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #13131a 0%, #0d0d0f 100%);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 100%);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 0 16px var(--accent-glow);
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    .brand-text span {
+      color: var(--accent);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      transition: all 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: var(--surface-2);
+      color: var(--text);
+      border-color: var(--accent);
+    }
+
+    .icon-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* ── Page Info ── */
+    .page-info {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .page-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+
+    .page-url {
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .style-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .style-btn {
+      flex: 1;
+      padding: 6px 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .style-btn:hover {
+      background: var(--surface-3);
+      color: var(--text);
+    }
+
+    .style-btn.active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .style-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      flex: 1;
+      padding: 9px 16px;
+      background: linear-gradient(135deg, var(--accent) 0%, #9f8cf5 100%);
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px var(--accent-glow);
+      letter-spacing: 0.3px;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px var(--accent-glow);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+
+    .btn-secondary {
+      padding: 9px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--surface-3);
+      color: var(--text);
+      border-color: var(--accent);
+    }
+
+    .btn-secondary:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* ── States ── */
+    .state {
+      display: none;
+      flex-direction: column;
+    }
+
+    .state.visible {
+      display: flex;
+    }
+
+    /* Loading */
+    #state-loading {
+      align-items: center;
+      justify-content: center;
+      padding: 36px 20px;
+      gap: 14px;
+    }
+
+    .spinner-wrap {
+      position: relative;
+      width: 40px;
+      height: 40px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 2.5px solid var(--surface-3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    /* Error */
+    #state-error {
+      padding: 16px;
+      gap: 10px;
+    }
+
+    .error-box {
+      background: rgba(248, 113, 113, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .error-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .error-message {
+      font-size: 12.5px;
+      color: var(--error);
+      line-height: 1.5;
+    }
+
+    /* Results */
+    #state-results {
+      overflow-y: auto;
+      max-height: 360px;
+      padding: 14px 16px;
+      gap: 14px;
+    }
+
+    #state-results::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #state-results::-webkit-scrollbar-track {
+      background: var(--surface);
+    }
+
+    #state-results::-webkit-scrollbar-thumb {
+      background: var(--surface-3);
+      border-radius: 4px;
+    }
+
+    /* Meta bar */
+    .meta-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .meta-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 9px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .meta-chip.cached {
+      border-color: rgba(96, 165, 250, 0.3);
+      color: var(--cache);
+    }
+
+    .meta-chip.sentiment-positive { color: var(--success); border-color: rgba(52, 211, 153, 0.3); }
+    .meta-chip.sentiment-negative { color: var(--error); border-color: rgba(248, 113, 113, 0.3); }
+
+    /* Sections */
+    .section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .summary-text {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      background: var(--surface);
+      border-left: 2px solid var(--accent);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    .bullets-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .bullet-item {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      font-size: 12.5px;
+      color: var(--text);
+      line-height: 1.5;
+      padding: 7px 10px;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      transition: border-color 0.15s;
+    }
+
+    .bullet-item:hover {
+      border-color: var(--accent);
+    }
+
+    .bullet-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .insights-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .insight-item {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .insight-icon {
+      color: var(--accent-2);
+      flex-shrink: 0;
+      font-size: 12px;
+      margin-top: 1px;
+    }
+
+    /* Footer */
+    .results-footer {
+      display: flex;
+      gap: 6px;
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .btn-footer {
+      flex: 1;
+      padding: 7px 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .btn-footer:hover {
+      background: var(--surface-3);
+      color: var(--text);
+      border-color: var(--accent);
+    }
+
+    .btn-footer.highlight-active {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: var(--accent-2);
+    }
+
+    .btn-footer:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Settings panel */
+    #state-settings {
+      padding: 14px 16px;
+      gap: 12px;
+    }
+
+    .settings-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field label {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .field select,
+    .field input {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px;
+      padding: 7px 10px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .field select:focus,
+    .field input:focus {
+      border-color: var(--accent);
+    }
+
+    .field input[type="password"] {
+      font-family: monospace;
+      letter-spacing: 2px;
+    }
+
+    .field-hint {
+      font-size: 10.5px;
+      color: var(--text-dim);
+    }
+
+    .settings-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .api-key-row {
+      position: relative;
+    }
+
+    .api-key-row input {
+      padding-right: 36px;
+    }
+
+    .toggle-key {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 2px;
+    }
+
+    .toggle-key:hover {
+      color: var(--text-muted);
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Empty state */
+    #state-empty {
+      align-items: center;
+      justify-content: center;
+      padding: 28px 20px;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      font-size: 32px;
+      opacity: 0.4;
+    }
+
+    .empty-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .empty-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    /* Copy feedback */
+    .copied-toast {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--success);
+      color: #0a1f14;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 20px;
+      opacity: 0;
+      transition: all 0.25s ease;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .copied-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon">✦</div>
+      <span class="brand-text"><span>AI</span> Summarizer</span>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="btn-settings" title="Settings" aria-label="Open settings" style="display:none">⚙</button>
+      <button class="icon-btn" id="btn-home" title="Back" aria-label="Back to main" style="display:none">✕</button>
+    </div>
+  </header>
+
+  <!-- Page info bar -->
+  <div class="page-info" id="page-info" aria-live="polite">
+    <div class="page-title" id="page-title">Loading page info…</div>
+    <div class="page-url" id="page-url"></div>
+  </div>
+
+  <!-- ── MAIN VIEW ── -->
+  <div id="view-main">
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="style-row" role="group" aria-label="Summary style">
+        <button class="style-btn" data-style="brief" aria-pressed="false">Brief</button>
+        <button class="style-btn active" data-style="detailed" aria-pressed="true">Detailed</button>
+        <button class="style-btn" data-style="academic" aria-pressed="false">Academic</button>
+      </div>
+      <div class="action-row">
+        <button class="btn-primary" id="btn-summarize">
+          <span id="btn-icon">✦</span>
+          <span id="btn-label">Summarize Page</span>
+        </button>
+        <button class="btn-secondary" id="btn-clear" style="display:none" aria-label="Clear summary">Clear</button>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="state visible" id="state-empty">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-text">Click <strong>Summarize Page</strong> to extract key insights from this page.</div>
+      <div class="empty-hint">Results are cached for 1 hour</div>
+    </div>
+
+    <!-- Loading state -->
+    <div class="state" id="state-loading" aria-live="polite" aria-label="Summarizing page">
+      <div class="spinner-wrap">
+        <div class="spinner"></div>
+      </div>
+      <div class="loading-text" id="loading-text">Extracting content…</div>
+    </div>
+
+    <!-- Error state -->
+    <div class="state" id="state-error" aria-live="assertive">
+      <div class="error-box" role="alert">
+        <span class="error-icon">⚠</span>
+        <span class="error-message" id="error-message"></span>
+      </div>
+    </div>
+
+    <!-- Results state -->
+    <div class="state" id="state-results" role="main" aria-label="Summary results">
+      <div class="meta-bar" id="meta-bar"></div>
+
+      <div class="section">
+        <div class="section-label">Overview</div>
+        <div class="summary-text" id="result-summary"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Key Points</div>
+        <ul class="bullets-list" id="result-bullets" aria-label="Key points"></ul>
+      </div>
+
+      <div class="section" id="insights-section">
+        <div class="section-label">Insights</div>
+        <div class="insights-list" id="result-insights"></div>
+      </div>
+    </div>
+
+    <!-- Results footer -->
+    <div class="results-footer" id="results-footer" style="display:none">
+      <button class="btn-footer" id="btn-copy" aria-label="Copy summary">
+        📋 Copy
+      </button>
+      <button class="btn-footer" id="btn-highlight" aria-label="Highlight key phrases on page">
+        ✨ Highlight
+      </button>
+      <button class="btn-footer" id="btn-refresh" aria-label="Refresh summary">
+        🔄 Refresh
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ── SETTINGS VIEW ── -->
+  <div id="view-settings" style="display:none">
+    <div class="state visible" id="state-settings">
+      <div class="settings-title">Settings</div>
+      <div class="divider"></div>
+
+      <div class="field">
+        <label for="sel-provider">AI Provider</label>
+        <select id="sel-provider">
+          <option value="groq">⚡ Groq (Free — Recommended)</option>
+          <option value="gemini">Google Gemini</option>
+          <option value="openai">OpenAI (ChatGPT)</option>
+          <option value="mistral">Mistral AI (Free tier)</option>
+        </select>
+      </div>
+
+      <div class="field" id="field-model">
+        <label for="sel-model">Model</label>
+        <select id="sel-model">
+          <option value="gpt-4o-mini">GPT-4o Mini (Fast, Cheap)</option>
+          <option value="gpt-4o">GPT-4o (Best quality)</option>
+          <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Legacy)</option>
+        </select>
+      </div>
+
+      <div class="field" style="display:none">
+        <label for="input-api-key">API Key</label>
+        <div class="api-key-row">
+          <input type="password" id="input-api-key" placeholder="sk-..." autocomplete="off" spellcheck="false" />
+          <button class="toggle-key" id="btn-toggle-key" aria-label="Toggle key visibility">👁</button>
+        </div>
+        <span class="field-hint">Stored locally on your device. Never sent anywhere except the AI API.</span>
+      </div>
+
+      <div class="settings-actions">
+        <button class="btn-primary" id="btn-save-settings" style="font-size:12px; padding: 8px 14px;">Save Settings</button>
+        <button class="btn-secondary" id="btn-clear-cache">Clear Cache</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="copied-toast" id="toast" aria-live="polite"></div>
+
+  <script src="src/popup.js"></script>
+</body>
+</html>

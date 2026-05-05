@@ -1,0 +1,14 @@
+# Environment variables — never commit these
+proxy/.env.local
+proxy/.env
+
+# Vercel build output
+proxy/.vercel
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules
+node_modules
+proxy/node_modules
