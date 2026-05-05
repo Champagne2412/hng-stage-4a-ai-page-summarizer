@@ -16,7 +16,7 @@ const RATE_LIMIT = {
 function isRateLimited() {
   const now = Date.now();
   RATE_LIMIT.requests = RATE_LIMIT.requests.filter(
-    (t) => now - t < RATE_LIMIT.windowMs
+    (t) => now - t < RATE_LIMIT.windowMs,
   );
   if (RATE_LIMIT.requests.length >= RATE_LIMIT.maxRequests) return true;
   RATE_LIMIT.requests.push(now);
@@ -26,11 +26,11 @@ function isRateLimited() {
 /**
  * Proxy URL — the only config needed in the extension.
  * API key lives on Vercel, never here.
- * 
+ *
  * After deploying to Vercel, replace this URL with your deployment URL.
  * e.g. "https://ai-summarizer-proxy.vercel.app"
  */
-const PROXY_URL = "https://ai-summarizer-proxy.vercel.app";
+const PROXY_URL = "https://hng-stage-4a-ai-page-summarizer.vercel.app";
 
 async function getSettings() {
   return new Promise((resolve) => {
@@ -102,7 +102,9 @@ async function callGemini(content, settings) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: buildPrompt(content, settings.summaryStyle) }] }],
+      contents: [
+        { parts: [{ text: buildPrompt(content, settings.summaryStyle) }] },
+      ],
       generationConfig: { temperature: 0.3, maxOutputTokens: 1000 },
     }),
   });
@@ -110,7 +112,7 @@ async function callGemini(content, settings) {
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
     throw new Error(
-      err?.error?.message || `Gemini API error: ${response.status}`
+      err?.error?.message || `Gemini API error: ${response.status}`,
     );
   }
 
@@ -132,9 +134,11 @@ function cacheKey(url, style) {
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "SUMMARIZE") {
-    handleSummarize(message).then(sendResponse).catch((err) => {
-      sendResponse({ success: false, error: err.message });
-    });
+    handleSummarize(message)
+      .then(sendResponse)
+      .catch((err) => {
+        sendResponse({ success: false, error: err.message });
+      });
     return true; // keep channel open for async
   }
 
@@ -190,7 +194,7 @@ async function handleSummarize({ content, url, forceRefresh }) {
   await new Promise((resolve) => {
     chrome.storage.local.set(
       { [key]: { data: summary, timestamp: Date.now(), url } },
-      resolve
+      resolve,
     );
   });
 
