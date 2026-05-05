@@ -1,0 +1,9 @@
+{
+  "name": "ai-summarizer-proxy",
+  "version": "1.0.0",
+  "description": "Secure proxy server for AI Page Summarizer Chrome Extension",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}
