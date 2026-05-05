@@ -30,7 +30,8 @@ function isRateLimited() {
  * After deploying to Vercel, replace this URL with your deployment URL.
  * e.g. "https://ai-summarizer-proxy.vercel.app"
  */
-const PROXY_URL = "https://hng-stage-4a-ai-page-summarizer.vercel.app";
+const PROXY_URL =
+  "https://hng-stage-4a-ai-page-summarizer-886tgc6gp.vercel.app";
 
 async function getSettings() {
   return new Promise((resolve) => {
